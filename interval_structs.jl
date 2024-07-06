@@ -1,39 +1,47 @@
 using Base: ImmutableDict
 
+import Base: +, -, parse, string, show, isless
+
 abstract type Interval end
 
 struct MathInterval <: Interval
     interval::Int
 end
 
++(x::MathInterval, y::MathInterval) = MathInterval(x.interval + y.interval)
+-(x::MathInterval, y::Interval) = MathInterval(x.interval - y.interval)
+-(x::MathInterval) = MathInterval(-x.interval)
+
 struct MusicInterval <: Interval
     accidental::Int # number of sharps/flats; negative for flats, positive for sharps
     interval::Int
 end
+naturalise(interval::MusicInterval) = MusicInterval(0, interval.interval)
+
+compute_accidental(s::AbstractString) = (
+    count(∈("#♯"), s) * 1 +
+    count(∈("𝄪"), s) * 2 +
+    count(∈("b♭"), s) * -1 +
+    count(∈("𝄫"), s) * -2
+)
 
 const _interval_re::Regex = r"^(?<accidental>[#♯𝄪b♭𝄫]*)(?<interval>\d+)$"
 
-re_match_to_music_interval(m::RegexMatch) = MusicInterval(
-    count(∈("#♯"), m["accidental"]) * 1 +
-    count(∈("𝄪"), m["accidental"]) * 2 +
-    count(∈("b♭"), m["accidental"]) * -1 +
-    count(∈("𝄫"), m["accidental"]) * -2,
-    parse(Int, m["interval"])
-)
+re_match_to_music_interval(m::RegexMatch) = MusicInterval(compute_accidental(m["accidental"]), parse(Int, m["interval"]))
 
-Base.parse(::Type{MusicInterval}, s::String) = (
+parse(::Type{MusicInterval}, s::AbstractString) = (
     (m = match(_interval_re, s)) isa Nothing
     ? throw(ArgumentError("invalid interval specification"))
     : re_match_to_music_interval(m)
 )
 
-Base.string(music_interval::MusicInterval) = (
+string(music_interval::MusicInterval) = (
     music_interval.accidental ≥ 0
     ? '♯'^ (music_interval.accidental % 2) * '𝄪'^ (music_interval.accidental ÷ 2)
     : '♭'^-(music_interval.accidental % 2) * '𝄫'^-(music_interval.accidental ÷ 2)
 ) * string(music_interval.interval)
 
-Base.show(io::IO, music_interval::MusicInterval) = print(io, string(music_interval))
+show(io::IO, music_interval::MusicInterval) = print(io, string(music_interval))
 
 const _music_to_math_dict::ImmutableDict{Int, Int} = ImmutableDict(
     1 => 0,
@@ -45,13 +53,12 @@ const _music_to_math_dict::ImmutableDict{Int, Int} = ImmutableDict(
     7 => 11
 )
 
-# MathInterval(music_interval::MusicInterval) = MathInterval(music_interval.accidental + _music_to_math_dict[music_interval.interval])
-Base.convert(::Type{MathInterval}, music_interval::MusicInterval) = MathInterval(
+MathInterval(music_interval::MusicInterval) = MathInterval(
     music_interval.accidental + 
     _music_to_math_dict[(music_interval.interval - 1) % 7 + 1] + 12*((music_interval.interval - 1) ÷ 7)
 )
 
-Base.isless(x::MusicInterval, y::MusicInterval) = (x.interval < y.interval) | (x.interval == y.interval && x.accidental < y.accidental)
+isless(x::MusicInterval, y::MusicInterval) = (x.interval < y.interval) | (x.interval == y.interval && x.accidental < y.accidental)
 
 macro i_str(s)
     parse(MusicInterval, s)

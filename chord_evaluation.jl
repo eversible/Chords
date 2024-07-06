@@ -2,7 +2,7 @@ include("chord_orderings.jl")
 include("chord_extensions.jl")
 
 # absolute_chord_decomposition_re = r"^(?<tonic>[A-G][b♭𝄫#♯𝄪]*)(?<qualities>[^()]*)(?:\((?<extensions>.*)\))?$"
-relative_chord_decomposition_re = r"^(?<qualities>[^()]*)(?:\((?<extensions>.*)\))?$"
+const _relative_chord_decomposition_re::Regex = r"^(?<qualities>[^()]*)(?:\((?<extensions>.*)\))?$"
 
 # function RelativeChord(qualities::Vector{ChordQuality}, extensions::Vector{ChordExtension}, evaluation_ordering::Ordering, base_chord = BASE_MAJOR_CHORD)
 #     ordered_modifiers = reverse((q -> q.modifier).(sort(qualities, order = evaluation_ordering)))
@@ -13,15 +13,15 @@ relative_chord_decomposition_re = r"^(?<qualities>[^()]*)(?:\((?<extensions>.*)\
 import Base: parse
 
 function parse(
-    ::Type{RelativeChord},
-    chord::String,
+    ::Type{RelativeChord{T}},
+    chord::AbstractString,
     ordered_qualities_dict::OrderedDict{String, ChordQuality},
     extensions_dict::Dict{Regex, ChordExtension},
     evaluation_ordering::Ordering;
     base_chord::RelativeChord = BASE_MAJOR_CHORD
-)
+) where T <: Interval
 
-    qualities, extensions = getindex.(Ref(match(relative_chord_decomposition_re, chord)), ["qualities", "extensions"])
+    qualities, extensions = getindex.(Ref(match(_relative_chord_decomposition_re, chord)), ["qualities", "extensions"])
 
     quality_vector = ChordQuality[]
     if !isnothing(qualities)
@@ -32,9 +32,12 @@ function parse(
             end
         end
         @assert isempty(qualities) "unknown chord qualities"
+
+        ordered_quality_modifiers = (q -> q.modifier).(sort(quality_vector, order = evaluation_ordering))
+        composed_quality_modifier = reduce(∘, reverse(ordered_quality_modifiers))
+    else
+        composed_quality_modifier = identity
     end
-    ordered_quality_modifiers = (q -> q.modifier).(sort(quality_vector, order = evaluation_ordering))
-    composed_quality_modifier = reduce(∘, reverse(ordered_quality_modifiers))
 
     extension_modifier_vector = Function[]
     if !isnothing(extensions)
@@ -48,8 +51,10 @@ function parse(
                 end
             end
         end
+        composed_extension_modifier = reduce(∘, reverse(extension_modifier_vector))
+    else
+        composed_extension_modifier = identity
     end
-    composed_extension_modifier = reduce(∘, reverse(extension_modifier_vector))
 
     final_modifier = composed_extension_modifier ∘ composed_quality_modifier
 
@@ -61,16 +66,16 @@ end
 # tonic, qualities, extensions = getindex.(Ref(match(chord_decomposition_re, chord)), ("tonic", "qualities", "extensions"))
 
 parse(
-    T::Type{RelativeChord},
-    chord::String,
+    ::Type{RelativeChord{T}},
+    chord::AbstractString,
     qualities_dict::Dict{String, ChordQuality},
     extensions_dict::Dict{Regex, ChordExtension},
     detection_ordering::Ordering,
     evaluation_ordering::Ordering;
     base_chord::RelativeChord = BASE_MAJOR_CHORD
-) = parse(T, chord, sort(OrderedDict(qualities_dict), order = detection_ordering), extensions_dict, evaluation_ordering, base_chord = base_chord)
+) where T <: Interval = parse(RelativeChord{T}, chord, sort(OrderedDict(qualities_dict), order = detection_ordering), extensions_dict, evaluation_ordering, base_chord = base_chord)
 
 
 macro rc_str(chord)
-    parse(RelativeChord, chord, standard_qualities_ordered_dict, standard_extensions_dict, standard_quality_evaluation_ordering)
+    parse(RelativeChord, chord, standard_qualities_ordered_dict, standard_extensions_dict, standard_quality_evaluation_ordering, base_chord = BASE_MAJOR_CHORD)
 end
