@@ -49,9 +49,16 @@ apply_extension(chord::RelativeChord, extension::ChordExtension; kwargs...) = ex
 apply_extension(chord::RelativeChord, extension::ChordExtension, re_match::RegexMatch) = apply_extension(chord, extension; re_match_to_symbol_dict(re_match)...)
 apply_extension(chord::RelativeChord, extension::ChordExtension, extension_string::String) = apply_extension(chord, extension, match(extension.detection_regex, extension_string))
 
-evert_attribute_vector(vec::Vector{T}) where T <: ChordAttribute = Dict(
-    rep => attr  for attr in vec for rep in attr.detection_representations
+# unparameterised_apply_extension(; kwargs...) = (chord, extension) -> apply_extension(chord, extension; kwargs...)
+# unparameterised_apply_extension(str::Union{String, RegexMatch}) = (chord, extension) -> apply_extension(chord, extension, extension_string)
+
+evert_quality_vector(vec::Vector{ChordQuality}) = Dict(
+    rep => quality  for quality in vec for rep in quality.detection_representations
 )
+evert_extension_vector(vec::Vector{ChordExtension}) = Dict(
+    extension.detection_regex => extension for extension in vec
+)
+
 
 
 # @with_kw struct RelativeChord

@@ -73,4 +73,4 @@ standard_qualities_vector = [
     ),
 ]
 
-standard_qualities_dict = evert_attribute_vector(standard_qualities_vector)
+standard_qualities_dict = evert_quality_vector(standard_qualities_vector)

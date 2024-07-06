@@ -30,3 +30,5 @@ standard_extensions_vector = [
         modifier = accidentallation_modifier
     )
 ]
+
+standard_extensions_dict = evert_extension_vector(standard_extensions_vector)
