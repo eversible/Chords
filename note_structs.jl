@@ -31,7 +31,7 @@ end
 NoteClass(interval::Int) = NoteClass(MathInterval(interval))
 NoteClass(accidental::Int, interval::Int) = NoteClass(MusicInterval(accidental, interval))
 
-show(io::IO, note_class::NoteClass{MusicInterval}) = print(io, string_accidental(note_class.interval_from_C) * _intervals_to_letters_from_C_dict[note_class.interval_from_C.interval])
+show(io::IO, note_class::NoteClass{MusicInterval}) = print(io, _intervals_to_letters_from_C_dict[note_class.interval_from_C.interval] * string_accidental(note_class.interval_from_C))
 
 getindex(note_class::NoteClass{MathInterval}, octave::Int) = Note(note_class.interval_from_C + MathInterval(12*(octave - MIDDLE_C_INDEX)))
 
@@ -62,4 +62,4 @@ apply_key(key::Key, note_class::NoteClass{MusicInterval}) = NoteClass(MusicInter
 
 major_scale(note_class::NoteClass{MathInterval}) = NoteClass.(Ref(note_class.interval_from_C) .+ MathInterval.([_music_to_math_dict[i] for i ∈ 1:7]))
 
-major_scale(note_class::NoteClass{MusicInterval}) = apply_key.(Ref(Key(note_class)), NoteClass.(MusicInterval.(0, [(note_class.interval_from_C.interval + i - 1) % 7 + 1 for i ∈ 0:6])))
+major_scale(note_class::NoteClass{MusicInterval}) = apply_key.(Ref(Key(note_class)), NoteClass.(MusicInterval.(0, [rem(note_class.interval_from_C.interval + i - 1, 7, RoundDown) + 1 for i ∈ 0:6])))

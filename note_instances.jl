@@ -1,24 +1,26 @@
 include("note_structs.jl")
 
-C, D, E, F, G, A, B = NoteClass.(MusicInterval.(0, [1, 2, 3, 4, 5, 6, 7]))
+# C, D, E, F, G, A, B = NoteClass.(MusicInterval.(0, [1, 2, 3, 4, 5, 6, 7]))
 
-D♭ = NoteClass(i"♭2")
-C♯ = NoteClass(i"♯1")
+macro note_variable(name::Symbol)
+    :( $(esc(name)) = @n_str $(string(name)) )
+end
 
-D♯ = NoteClass(i"♯2")
-E♭ = NoteClass(i"♭3")
+macro note_variables(names...)
+    expr_vec = Expr[]
+    println(names)
+    for name ∈ names
+        push!(expr_vec, :(@note_variable $name))
+    end
+    Expr(:block, expr_vec...)
+end
 
-E♯ = NoteClass(i"♯3")
-F♭ = NoteClass(i"♭4")
+@note_variables C D E F G A B
 
-F♯ = NoteClass(i"♯4")
-G♭ = NoteClass(i"♭5")
+@note_variables C♯ D♯ E♯ F♯ G♯ A♯ B♯
+@note_variables C♯♯ D♯♯ E♯♯ F♯♯ G♯♯ A♯♯ B♯♯
+@note_variables C𝄪 D𝄪 E𝄪 F𝄪 G𝄪 A𝄪 B𝄪
 
-G♯ = NoteClass(i"♯5")
-A♭ = NoteClass(i"♭6")
-
-A♯ = NoteClass(i"♯6")
-B♭ = NoteClass(i"♭7")
-
-B♯ = NoteClass(i"♯7")
-C♭ = NoteClass(i"♭8")
+@note_variables C♭ D♭ E♭ F♭ G♭ A♭ B♭
+@note_variables C♭♭ D♭♭ E♭♭ F♭♭ G♭♭ A♭♭ B♭♭
+@note_variables C𝄫 D𝄫 E𝄫 F𝄫 G𝄫 A𝄫 B𝄫
