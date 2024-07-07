@@ -8,7 +8,6 @@ end
 
 macro note_variables(names...)
     expr_vec = Expr[]
-    println(names)
     for name ∈ names
         push!(expr_vec, :(@note_variable $name))
     end
