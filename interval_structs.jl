@@ -25,6 +25,9 @@ compute_accidental(s::AbstractString) = (
     count(∈("𝄫"), s) * -2
 )
 
+string_accidental(accidental::Int) = accidental ≥ 0 ? '♯'^(accidental % 2) * '𝄪'^(accidental ÷ 2) : '♭'^-(accidental % 2) * '𝄫'^-(accidental ÷ 2)
+string_accidental(interval::MusicInterval) = string_accidental(interval.accidental)
+
 const _interval_re::Regex = r"^(?<accidental>[#♯𝄪b♭𝄫]*)(?<interval>\d+)$"
 
 re_match_to_music_interval(m::RegexMatch) = MusicInterval(compute_accidental(m["accidental"]), parse(Int, m["interval"]))
@@ -35,11 +38,7 @@ parse(::Type{MusicInterval}, s::AbstractString) = (
     : re_match_to_music_interval(m)
 )
 
-string(music_interval::MusicInterval) = (
-    music_interval.accidental ≥ 0
-    ? '♯'^ (music_interval.accidental % 2) * '𝄪'^ (music_interval.accidental ÷ 2)
-    : '♭'^-(music_interval.accidental % 2) * '𝄫'^-(music_interval.accidental ÷ 2)
-) * string(music_interval.interval)
+string(music_interval::MusicInterval) = string_accidental(music_interval) * string(music_interval.interval)
 
 show(io::IO, music_interval::MusicInterval) = print(io, string(music_interval))
 

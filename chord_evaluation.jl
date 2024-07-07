@@ -1,6 +1,8 @@
 include("chord_orderings.jl")
 include("chord_extensions.jl")
 
+# TODO: slash chords
+
 # absolute_chord_decomposition_re = r"^(?<tonic>[A-G][b♭𝄫#♯𝄪]*)(?<qualities>[^()]*)(?:\((?<extensions>.*)\))?$"
 const _relative_chord_decomposition_re::Regex = r"^(?<qualities>[^()]*)(?:\((?<extensions>.*)\))?$"
 

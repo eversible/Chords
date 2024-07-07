@@ -44,7 +44,7 @@ standard_qualities_vector = [
     ),
     ChordQuality( # half_diminished
         representations = ["ø"],
-        detection_representations = ["ø", "o/"],
+        detection_representations = ["ø", "o/", "0"],
         modifier = half_diminished_modifier
     ),
     ChordQuality( # diminished
