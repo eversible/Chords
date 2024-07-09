@@ -10,22 +10,22 @@ accidentallation_modifier(chord::RelativeChord{MusicInterval}; interval) = Relat
 suspension, addition, omission, accidentallation = 
 standard_extensions_vector = [
     ChordExtension( # suspension
-        detection_regex = r"sus(?<interval>[#♯𝄪b♭𝄫]*\d*)",
+        detection_regex = r"^sus(?<interval>[#♯𝄪b♭𝄫]*\d*)$",
         representations = (interval -> "sus$interval", interval -> interval == "4" ? "sus" : "sus$interval"),
         modifier = suspended_modifier
     ),
     ChordExtension( # addition
-        detection_regex = r"add(?<interval>[#♯𝄪b♭𝄫]*\d*)",
+        detection_regex = r"^add(?<interval>[#♯𝄪b♭𝄫]*\d*)$",
         representations = (interval -> "add$interval",),
         modifier = addition_modifier
     ),
     ChordExtension( # omission
-        detection_regex = r"omit(?<interval>[#♯𝄪b♭𝄫]*\d*)",
+        detection_regex = r"^omit(?<interval>[#♯𝄪b♭𝄫]*\d*)$",
         representations = (interval -> "omit$interval",),
         modifier = omission_modifier
     ),
     ChordExtension( # accidentallation
-        detection_regex = r"(?<interval>[#♯𝄪b♭𝄫]*\d*)",
+        detection_regex = r"^(?<interval>[#♯𝄪b♭𝄫]*\d*)$",
         representations = (interval -> String(interval),),
         modifier = accidentallation_modifier
     )
