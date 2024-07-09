@@ -1,6 +1,8 @@
 include("chord_evaluation.jl")
 include("note_structs.jl")
 
+import Base: convert, show
+
 # absolute_chord_decomposition_re = r"^(?<tonic>[A-G][b♭𝄫#♯𝄪]*)(?<qualities>[^()]*)(?:\((?<extensions>.*)\))?$"
 const _partial_absolute_chord_decomposition_re::Regex = r"(?<tonic>[A-G][b♭𝄫#♯𝄪]*)(?<relative_chord>.*)"
 
@@ -26,6 +28,15 @@ macro pc_str(s)
 end
 
 # TODO:
-struct Chord{T <: Interval}
-    notes::SortedSet{NoteClass{T}}
+struct ChordClass{T <: Interval}
+    notes::Vector{NoteClass{T}}
+end
+show(io::IO, chord::ChordClass) = join(io, string.(chord.notes), ' ')
+
+apply_chord(chord::RelativeChord{MusicInterval}, base_scale::Vector{NoteClass{MusicInterval}})::ChordClass = ChordClass([interval.accidental + base_scale[mod1(interval.interval, end)] for interval ∈ chord])
+
+convert(::Type{ChordClass}, pointed_chord::PointedChord)::ChordClass = apply_chord(pointed_chord.relative_chord, major_scale(pointed_chord.tonic))
+
+macro c_str(s)
+    :(convert(ChordClass, @pc_str $s))
 end

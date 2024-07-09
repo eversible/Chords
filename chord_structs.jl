@@ -3,13 +3,18 @@ include("interval_structs.jl")
 using Parameters
 using DataStructures
 
+import Base: in, show, iterate, length
+
 struct RelativeChord{T <: Interval}
     intervals::SortedSet{T}
 end
 RelativeChord(intervals) = RelativeChord(SortedSet(intervals))
+iterate(chord::RelativeChord) = iterate(chord.intervals)
+iterate(chord::RelativeChord, state) = iterate(chord.intervals, state)
+length(chord::RelativeChord) = length(chord.intervals)
 
-Base.in(elt::T, chord::RelativeChord{T}) where T = elt ∈ chord.intervals
-Base.show(io::IO, chord::RelativeChord) = join(io, string.(chord.intervals), ' ')
+in(elt::T, chord::RelativeChord{T}) where T = elt ∈ chord.intervals
+show(io::IO, chord::RelativeChord) = join(io, string.(chord.intervals), ' ')
 
 BASE_MAJOR_CHORD = RelativeChord([i"1", i"3", i"5"])
 
@@ -52,10 +57,10 @@ apply_extension(chord::RelativeChord, extension::ChordExtension, extension_strin
 # unparameterised_apply_extension(; kwargs...) = (chord, extension) -> apply_extension(chord, extension; kwargs...)
 # unparameterised_apply_extension(str::Union{String, RegexMatch}) = (chord, extension) -> apply_extension(chord, extension, extension_string)
 
-evert_quality_vector(vec::Vector{ChordQuality}) = Dict(
+evert_quality_vector(vec::Vector{ChordQuality})::Dict = Dict(
     rep => quality  for quality in vec for rep in quality.detection_representations
 )
-evert_extension_vector(vec::Vector{ChordExtension}) = Dict(
+evert_extension_vector(vec::Vector{ChordExtension})::Dict = Dict(
     extension.detection_regex => extension for extension in vec
 )
 

@@ -1,6 +1,6 @@
 include("interval_structs.jl")
 
-import Base: getindex, convert, show
+import Base: getindex, convert, show, +
 
 MIDDLE_C_INDEX = 4
 
@@ -31,6 +31,8 @@ end
 NoteClass(interval::Int) = NoteClass(MathInterval(interval))
 NoteClass(accidental::Int, interval::Int) = NoteClass(MusicInterval(accidental, interval))
 
++(accidental::Accidental, note::NoteClass) = NoteClass(accidental + note.interval_from_C)
+
 show(io::IO, note_class::NoteClass{MusicInterval}) = print(io, _intervals_to_letters_from_C_dict[note_class.interval_from_C.interval] * string_accidental(note_class.interval_from_C))
 
 getindex(note_class::NoteClass{MathInterval}, octave::Int) = Note(note_class.interval_from_C + MathInterval(12*(octave - MIDDLE_C_INDEX)))
@@ -57,8 +59,6 @@ end
 Key(note_class::NoteClass{MusicInterval}) = Key(rem(MathInterval(naturalise(note_class.interval_from_C)).interval * 7 + 1, 12, RoundDown) - 1 + 7*(note_class.interval_from_C.accidental))
 
 apply_key(key::Key, note_class::NoteClass{MusicInterval}) = NoteClass(MusicInterval(div(key.sharps, 7, RoundDown) + (rem(note_class.interval_from_C.interval * 2 - 1, 7, RoundDown) + 1 ≤ rem(key.sharps, 7, RoundDown)), note_class.interval_from_C.interval))
-
-# (note_class.interval_from_C.interval * 2 - 1) % 7 - 1
 
 major_scale(note_class::NoteClass{MathInterval}) = NoteClass.(Ref(note_class.interval_from_C) .+ MathInterval.([_music_to_math_dict[i] for i ∈ 1:7]))
 
