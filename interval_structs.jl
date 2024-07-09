@@ -1,6 +1,6 @@
 using Base: ImmutableDict
 
-import Base: +, -, parse, string, show, isless
+import Base: +, -, <, parse, string, show, isless, zero, convert, promote_rule
 
 abstract type Interval end
 
@@ -12,33 +12,47 @@ end
 -(x::MathInterval, y::Interval) = MathInterval(x.interval - y.interval)
 -(x::MathInterval) = MathInterval(-x.interval)
 
+struct Accidental <: Integer
+    sharps::Int # number of sharps/flats; negative for flats, positive for sharps
+end
+convert(::Type{Accidental}, sharps::Int)::Accidental = Accidental(sharps)
+convert(::Type{Int}, accidental::Accidental)::Int = accidental.sharps
+promote_rule(::Type{Accidental}, ::Type{Int}) = Int
+zero(::Type{Accidental})::Accidental = Accidental(0)
++(x::Accidental, y::Accidental)::Accidental = Accidental(x.sharps + y.sharps)
+-(x::Accidental, y::Accidental)::Accidental = Accidental(x.sharps - y.sharps)
+isless(x::Accidental, y::Accidental) = x.sharps < y.sharps
+<(x::Accidental, y::Accidental) = isless(x, y) #! isless fallback not working directly for some reason?
+
 struct MusicInterval <: Interval
-    accidental::Int # number of sharps/flats; negative for flats, positive for sharps
+    accidental::Accidental
     interval::Int
 end
-naturalise(interval::MusicInterval) = MusicInterval(0, interval.interval)
+naturalise(interval::MusicInterval)::MusicInterval = MusicInterval(zero(Accidental), interval.interval)
 
-compute_accidental(s::AbstractString) = (
++(accidental::Accidental, interval::MusicInterval) = MusicInterval(interval.accidental + accidental, interval.interval)
+
+compute_accidental(s::AbstractString)::Accidental = Accidental(
     count(∈("#♯"), s) * 1 +
     count(∈("𝄪"), s) * 2 +
     count(∈("b♭"), s) * -1 +
     count(∈("𝄫"), s) * -2
 )
 
-string_accidental(accidental::Int) = accidental ≥ 0 ? '♯'^(accidental % 2) * '𝄪'^(accidental ÷ 2) : '♭'^-(accidental % 2) * '𝄫'^-(accidental ÷ 2)
-string_accidental(interval::MusicInterval) = string_accidental(interval.accidental)
+string_accidental(accidental::Accidental)::String = (n = accidental.sharps) ≥ 0 ? '♯'^(n % 2) * '𝄪'^(n ÷ 2) : '♭'^-(n % 2) * '𝄫'^-(n ÷ 2)
+string_accidental(interval::MusicInterval)::String = string_accidental(interval.accidental)
 
 const _interval_re::Regex = r"^(?<accidental>[#♯𝄪b♭𝄫]*)(?<interval>\d+)$"
 
-re_match_to_music_interval(m::RegexMatch) = MusicInterval(compute_accidental(m["accidental"]), parse(Int, m["interval"]))
+re_match_to_music_interval(m::RegexMatch)::MusicInterval = MusicInterval(compute_accidental(m["accidental"]), parse(Int, m["interval"]))
 
-parse(::Type{MusicInterval}, s::AbstractString) = (
+parse(::Type{MusicInterval}, s::AbstractString)::MusicInterval = (
     (m = match(_interval_re, s)) isa Nothing
     ? throw(ArgumentError("invalid interval specification"))
     : re_match_to_music_interval(m)
 )
 
-string(music_interval::MusicInterval) = string_accidental(music_interval) * string(music_interval.interval)
+string(music_interval::MusicInterval)::String = string_accidental(music_interval) * string(music_interval.interval)
 
 show(io::IO, music_interval::MusicInterval) = print(io, string(music_interval))
 
@@ -52,12 +66,12 @@ const _music_to_math_dict::ImmutableDict{Int, Int} = ImmutableDict(
     7 => 11
 )
 
-MathInterval(music_interval::MusicInterval) = MathInterval(
-    music_interval.accidental + 
+MathInterval(music_interval::MusicInterval)::MathInterval = MathInterval(
+    music_interval.accidental.sharps + 
     _music_to_math_dict[(music_interval.interval - 1) % 7 + 1] + 12*((music_interval.interval - 1) ÷ 7)
 )
 
-isless(x::MusicInterval, y::MusicInterval) = (x.interval < y.interval) | (x.interval == y.interval && x.accidental < y.accidental)
+isless(x::MusicInterval, y::MusicInterval)::Bool = (x.interval < y.interval) | (x.interval == y.interval && x.accidental < y.accidental)
 
 macro i_str(s)
     parse(MusicInterval, s)
