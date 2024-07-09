@@ -26,7 +26,7 @@ function parse(
     qualities, extensions = getindex.(Ref(match(_relative_chord_decomposition_re, chord)), ["qualities", "extensions"])
 
     quality_vector = ChordQuality[]
-    if !isnothing(qualities)
+    if !isnothing(qualities) && !isempty(qualities)
         for (rep, quality) ∈ pairs(ordered_qualities_dict)
             if occursin(rep, qualities)
                 push!(quality_vector, quality)
@@ -42,7 +42,7 @@ function parse(
     end
 
     extension_modifier_vector = Function[]
-    if !isnothing(extensions)
+    if !isnothing(extensions) && !isempty(extensions)
         extension_list = strip.(split(extensions, ","))
         for str_ext ∈ extension_list
             for (re, extension) ∈ pairs(extensions_dict)
@@ -79,5 +79,5 @@ parse(
 
 
 macro rc_str(chord)
-    parse(RelativeChord, chord, standard_qualities_ordered_dict, standard_extensions_dict, standard_quality_evaluation_ordering, base_chord = BASE_MAJOR_CHORD)
+    parse(RelativeChord{MusicInterval}, chord, standard_qualities_ordered_dict, standard_extensions_dict, standard_quality_evaluation_ordering, base_chord = BASE_MAJOR_CHORD)
 end
