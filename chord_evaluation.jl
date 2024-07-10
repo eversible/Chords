@@ -17,9 +17,9 @@ import Base: parse
 function parse(
     ::Type{RelativeChord{T}},
     chord::AbstractString,
-    ordered_qualities_dict::OrderedDict{String, ChordQuality},
-    extensions_dict::Dict{Regex, ChordExtension},
-    evaluation_ordering::Ordering;
+    ordered_qualities_dict::OrderedDict{String, ChordQuality} = standard_qualities_ordered_dict,
+    extensions_dict::Dict{Regex, ChordExtension} = standard_extensions_dict,
+    evaluation_ordering::Ordering = standard_quality_evaluation_ordering;
     base_chord::RelativeChord = BASE_MAJOR_CHORD
 ) where T <: Interval
 
