@@ -1,6 +1,6 @@
 include("chord_structs.jl")
 
-suspended_modifier(chord::RelativeChord{MusicInterval}; interval) = RelativeChord(setdiff(chord.intervals, SortedSet([MINOR_3RD, MAJOR_3RD])) ∪ (isempty(interval) ? SortedSet([PERFECT_4TH]) : SortedSet([(MusicInterval, interval)])))
+suspended_modifier(chord::RelativeChord{MusicInterval}; interval) = RelativeChord(setdiff(chord.intervals, SortedSet([MINOR_3RD, MAJOR_3RD])) ∪ (isempty(interval) ? SortedSet([PERFECT_4TH]) : SortedSet([(MusicInterval(0, parse(Int, interval)))])))
 addition_modifier(chord::RelativeChord{MusicInterval}; interval) = RelativeChord(chord.intervals ∪ SortedSet([parse(MusicInterval, interval)]))
 omission_modifier(chord::RelativeChord{MusicInterval}; interval) = RelativeChord(setdiff(chord.intervals, SortedSet([parse(MusicInterval, interval)])))
 
