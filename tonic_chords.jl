@@ -1,5 +1,6 @@
 include("chord_evaluation.jl")
 include("note_structs.jl")
+include("note_instances.jl")
 
 import Base: convert, show
 
@@ -10,6 +11,7 @@ struct PointedChord{T <: Interval}
     tonic::NoteClass{T}
     relative_chord::RelativeChord{T}
 end
+# show(io::IO, chord::PointedChord) = string(chord.tonic) * chord.relative_chord
 
 function parse(
     ::Type{PointedChord{MusicInterval}},
@@ -27,7 +29,6 @@ macro pc_str(s)
     parse(PointedChord{MusicInterval}, s, standard_qualities_ordered_dict, standard_extensions_dict, standard_quality_evaluation_ordering, base_chord = BASE_MAJOR_CHORD)
 end
 
-# TODO:
 struct ChordClass{T <: Interval}
     notes::Vector{NoteClass{T}}
 end
@@ -37,6 +38,10 @@ apply_chord(chord::RelativeChord{MusicInterval}, base_scale::Vector{NoteClass{Mu
 
 convert(::Type{ChordClass}, pointed_chord::PointedChord)::ChordClass = apply_chord(pointed_chord.relative_chord, major_scale(pointed_chord.tonic))
 
+ChordClass(tonic::NoteClass{MusicInterval}, chord::RelativeChord{MusicInterval})::ChordClass = convert(ChordClass, PointedChord(tonic, chord))
+
 macro c_str(s)
     :(convert(ChordClass, @pc_str $s))
 end
+
+all_tonics(chord::RelativeChord{MusicInterval}) = Dict(note => ChordClass(note, chord) for note in [C, D♭, D, E♭, E, F, G♭, G, A♭, A, B♭, B])
